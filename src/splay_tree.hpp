@@ -26,6 +26,8 @@ template <typename T> class SplayTree {
 	// Tree root node
 	Child root = nullptr;
 	std::size_t size = 0;
+	// Rewind stack for splaying
+	ParentStack rewind;
 
 	// Modifies tree below axis ONLY
 	static inline void right_rotate(Child &axis)
@@ -154,13 +156,12 @@ template <typename T> class SplayTree {
 			++size;
 			return true;
 		} else {
-			ParentStack parents;
-			parents.reserve(size + 1);
-			if (add(parents, value, root)) {
-				splay(parents);
+			if (add(rewind, value, root)) {
+				splay(rewind);
 				++size;
 				return true;
 			}
+			rewind.clear();
 		}
 		return false;
 	}
@@ -184,14 +185,12 @@ template <typename T> class SplayTree {
 				// make the left subtree root; splay its maximum value; make the
 				// right subtree root's right child
 				root = std::move(left_tree);
-				ParentStack parents;
-				parents.reserve(size);
 				std::reference_wrapper<Child> curr = root;
 				while (curr.get() != nullptr) {
-					parents.push_back(curr);
+					rewind.push_back(curr);
 					curr = curr.get()->right;
 				}
-				splay(parents);
+				splay(rewind);
 				root->right = std::move(right_tree);
 			}
 			--size;
@@ -202,15 +201,13 @@ template <typename T> class SplayTree {
 	}
 	bool contains(const T &value)
 	{
-		ParentStack parents;
-		parents.reserve(size);
 		// Root is null. It ain't here.
 		if (root == nullptr) {
 			return false;
 		}
 		// If we found it, rotate it to the root, and return true.
-		bool found = contains(parents, root, value);
-		splay(parents);
+		bool found = contains(rewind, root, value);
+		splay(rewind);
 		return found;
 	}
 	void in_order_print(void)
