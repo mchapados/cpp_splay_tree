@@ -1,10 +1,24 @@
 #include "splay_tree.hpp"
+#include <cstdlib>
 #include <thread>
 #include <mutex>
 #include <atomic>
 extern "C" {
 #include <unistd.h>
 #include <fcntl.h>
+}
+
+int french_tree(void)
+{
+	SplayTree<std::string> arbre;
+	arbre.add("const mot_simple<char> &valeur");
+	arbre.add("banane");
+	arbre.add("fraise");
+	arbre.add("kiwi");
+	arbre.add("sirop d'érable");
+	arbre.add("crêpe");
+	arbre.structure_print();
+	return EXIT_SUCCESS;
 }
 
 int main(void)
@@ -57,5 +71,5 @@ int main(void)
 	bytes.structure_print();
 	std::cout << "Ending Tree size (maximum tree size is 256): "
 		  << bytes.get_size() << "\n";
-	return EXIT_SUCCESS;
+	return french_tree();
 }

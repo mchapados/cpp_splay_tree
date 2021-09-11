@@ -8,7 +8,7 @@
 template <typename T> class SplayTree {
 	struct Node;
 	using Child = std::unique_ptr<Node>;
-	using ParentStack = std::vector<std::reference_wrapper<Child>>;
+	using ParentStack = std::vector<std::reference_wrapper<Child> >;
 	// Each node in the tree
 	struct Node {
 		Child left;
@@ -80,54 +80,6 @@ template <typename T> class SplayTree {
 		}
 	}
 
-	static bool add(ParentStack &parents, const T &value, Child &n)
-	{
-		// Keep track of our trail as we go for splaying.
-		parents.push_back(n);
-		// If it's already here, then we won't add it.
-		if (value == n->data) {
-			return false;
-			// Bigger, and can be added here. Add and return.
-		} else if (value > n->data && n->right == nullptr) {
-			n->right = std::make_unique<Node>(value);
-			// Add the new node to the parents stack so that splay can find out
-			// which node to rotate to the root.
-			parents.push_back(n->right);
-			return true;
-			// Bigger, and n has children, call add on n's right child.
-		} else if (value > n->data) {
-			return add(parents, value, n->right);
-			// Smaller, and can be added here. Add and return.
-		} else if (value < n->data && n->left == nullptr) {
-			n->left = std::make_unique<Node>(value);
-			// Add the new node to the parents stack so that splay can find out
-			// which node to rotate to the root.
-			parents.push_back(n->left);
-			return true;
-			// Smaller, and n has children, call on n's left child.
-		} else if (value < n->data) {
-			return add(parents, value, n->left);
-		}
-		return false;
-	}
-
-	static bool contains(ParentStack &parents, Child &n, const T &value)
-	{
-		// Keep track of our trail as we go for splaying.
-		parents.push_back(n);
-		// Its bigger than n, so check the right
-		if (value > n->data && n->right != nullptr)
-			return contains(parents, n->right, value);
-		// Its less than n, so check the left
-		else if (value < n->data && n->left != nullptr)
-			return contains(parents, n->left, value);
-		// If it's not here, then it isn't in the tree.
-		else if (value == n->data)
-			return true;
-		else
-			return false;
-	}
-
 	static void in_order_print(const Node &n)
 	{
 		if (n.left != nullptr)
@@ -155,12 +107,20 @@ template <typename T> class SplayTree {
 			++size;
 			return true;
 		} else {
-			if (add(rewind, value, root)) {
-				splay(rewind);
+			if (!contains(value)) {
+				Child new_node = std::make_unique<Node>(value);
+				if (new_node->data > root->data) {
+					new_node->right =
+						std::move(root->right);
+					new_node->left = std::move(root);
+				} else {
+					new_node->left = std::move(root->left);
+					new_node->right = std::move(root);
+				}
+				root = std::move(new_node);
 				++size;
 				return true;
 			}
-			rewind.clear();
 		}
 		return false;
 	}
@@ -204,8 +164,20 @@ template <typename T> class SplayTree {
 		if (root == nullptr) {
 			return false;
 		}
+		bool found = false;
+		std::reference_wrapper<Child> curr = root;
+		while (curr.get() != nullptr) {
+			rewind.push_back(curr);
+			if (value > curr.get()->data)
+				curr = curr.get()->right;
+			else if (value < curr.get()->data)
+				curr = curr.get()->left;
+			else {
+				found = true;
+				break;
+			}
+		}
 		// If we found it, rotate it to the root, and return true.
-		bool found = contains(rewind, root, value);
 		splay(rewind);
 		return found;
 	}
