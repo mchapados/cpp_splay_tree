@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <iostream>
 #include <vector>
@@ -7,7 +8,7 @@
 template <typename T> class SplayTree {
 	struct Node;
 	using Child = std::unique_ptr<Node>;
-	using ParentStack = std::vector<std::reference_wrapper<Child> >;
+	using ParentStack = std::vector<std::reference_wrapper<Child>>;
 	// Each node in the tree
 	struct Node {
 		Child left;
@@ -32,9 +33,8 @@ template <typename T> class SplayTree {
 	// Modifies tree below axis ONLY
 	static inline void right_rotate(Child &axis)
 	{
-		Child temp = nullptr;
 		// move x to temp
-		std::swap(axis->left, temp);
+		Child temp = std::move(axis->left);
 		// Make x our axis
 		std::swap(axis, temp);
 		// swap x's right child with y's left child
@@ -46,9 +46,8 @@ template <typename T> class SplayTree {
 	// Modifies tree below axis ONLY
 	static inline void left_rotate(Child &axis)
 	{
-		Child temp = nullptr;
 		// move x to temp
-		std::swap(axis->right, temp);
+		Child temp = std::move(axis->right);
 		// make x our axis
 		std::swap(axis, temp);
 		// swap x's left child with y's right child
@@ -60,7 +59,7 @@ template <typename T> class SplayTree {
 	static void splay(ParentStack &parents)
 	{
 		// Pull the value we are rotating to the root from the last visited node
-		T &value = ((Child &)parents.back())->data;
+		T &value = parents.back().get()->data;
 		// Remove the value node from the stack, and move up to the axis
 		parents.pop_back();
 		// Splay up the stack until the value node is at the root.
@@ -173,17 +172,17 @@ template <typename T> class SplayTree {
 		}
 		if (contains(value)) {
 			// Decapitate the root
-			Child left_tree = nullptr;
-			Child right_tree = nullptr;
-			std::swap(root->left, left_tree);
-			std::swap(root->right, right_tree);
+			Child left_tree = std::move(root->left);
+			Child right_tree = std::move(root->right);
 			// There is no left tree of the root, make the right subtree of root
 			// into the main tree
 			if (left_tree == nullptr) {
+				// Old root is deallocated here
 				root = std::move(right_tree);
 			} else {
 				// make the left subtree root; splay its maximum value; make the
 				// right subtree root's right child
+				// Old root is deallocated here
 				root = std::move(left_tree);
 				std::reference_wrapper<Child> curr = root;
 				while (curr.get() != nullptr) {

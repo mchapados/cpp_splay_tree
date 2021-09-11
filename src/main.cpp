@@ -12,6 +12,7 @@ int main(void)
 	SplayTree<std::int32_t> bytes;
 	std::mutex bytes_lock;
 	std::atomic<bool> shutdown(false);
+	std::atomic<std::uint8_t> some_byte(0);
 	std::thread t1([&]() -> int {
 		// Open up urandom
 		int handle = open("/dev/urandom", O_RDONLY);
@@ -27,6 +28,7 @@ int main(void)
 				std::cerr << "Error reading from urandom.\n";
 				return EXIT_FAILURE;
 			}
+			some_byte.store(read_byte);
 			{ // Mutex locked scope
 				std::lock_guard<std::mutex> lock(bytes_lock);
 				bytes.add(read_byte);
@@ -44,6 +46,11 @@ int main(void)
 		if (has) {
 			shutdown.store(true);
 			break;
+		} else {
+			{ // Mutex locked scope
+				std::lock_guard<std::mutex> lock(bytes_lock);
+				bytes.remove(some_byte.load());
+			}
 		}
 	}
 	t1.join();

@@ -5,4 +5,4 @@ flags = ['-O3', '-Wall', '-Werror', '-Wextra']
 executable('splay_tree',
            src,
            cpp_args : flags,
-		   link_args: ['-lpthread'])
+		   dependencies: dependency('threads'))
