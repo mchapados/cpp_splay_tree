@@ -1,14 +1,13 @@
 #pragma once
 #include <cstdint>
-#include <functional>
 #include <memory>
 #include <iostream>
-#include <vector>
+#include <stack>
 
 template <typename T> class SplayTree {
 	struct Node;
 	using Child = std::unique_ptr<Node>;
-	using ParentStack = std::vector<std::reference_wrapper<Child> >;
+	using ParentStack = std::stack<std::reference_wrapper<Child> >;
 	// Each node in the tree
 	struct Node {
 		Child left;
@@ -56,15 +55,15 @@ template <typename T> class SplayTree {
 		std::swap(axis->left, temp);
 	}
 
-	static void splay(ParentStack &parents)
+	static void splay(ParentStack &rewind)
 	{
 		// Pull the value we are rotating to the root from the last visited node
-		T &value = parents.back().get()->data;
+		T &value = rewind.top().get()->data;
 		// Remove the value node from the stack, and move up to the axis
-		parents.pop_back();
+		rewind.pop();
 		// Splay up the stack until the value node is at the root.
-		while (!parents.empty()) {
-			Child &axis = parents.back();
+		while (!rewind.empty()) {
+			Child &axis = rewind.top();
 			// the value we are rotating up is on the left of the axis
 			// rotate to the right, to bring it to the root.
 			if (axis->left != nullptr &&
@@ -76,7 +75,7 @@ template <typename T> class SplayTree {
 				left_rotate(axis);
 			}
 			// Move the axis one step up in the tree
-			parents.pop_back();
+			rewind.pop();
 		}
 	}
 
@@ -146,7 +145,7 @@ template <typename T> class SplayTree {
 				root = std::move(left_tree);
 				std::reference_wrapper<Child> curr = root;
 				while (curr.get() != nullptr) {
-					rewind.push_back(curr);
+					rewind.push(curr);
 					curr = curr.get()->right;
 				}
 				splay(rewind);
@@ -167,7 +166,7 @@ template <typename T> class SplayTree {
 		bool found = false;
 		std::reference_wrapper<Child> curr = root;
 		while (curr.get() != nullptr) {
-			rewind.push_back(curr);
+			rewind.push(curr);
 			if (value > curr.get()->data)
 				curr = curr.get()->right;
 			else if (value < curr.get()->data)
