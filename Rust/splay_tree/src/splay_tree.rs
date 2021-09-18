@@ -24,6 +24,8 @@ pub struct SplayTree<T: Ord + Display> {
 	rewind: Vec<*mut Child<T>>,
 }
 
+unsafe impl<T: Ord + Display> Send for SplayTree<T> {}
+
 impl<T: Ord + Display> SplayTree<T> {
 	pub fn new() -> SplayTree<T> {
 		SplayTree {
@@ -188,5 +190,9 @@ impl<T: Ord + Display> SplayTree<T> {
 
 	pub fn structure_print(&self) {
 		SplayTree::structure_print_priv(&self.root, 0);
+	}
+
+	pub fn size(&self) -> usize {
+		self.size
 	}
 }

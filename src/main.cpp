@@ -35,7 +35,7 @@ int main(void)
 				<< "Error. Unable to open urandom for reading.\n";
 			return EXIT_FAILURE;
 		}
-		// Add a byte every second to the splay tree
+		// Keep adding bytes to the splay tree until we are told to shutdown.
 		while (!(shutdown.load())) {
 			std::uint8_t read_byte;
 			if (read(handle, &read_byte, 1) < 0) {
