@@ -7,5 +7,6 @@
 - Running the Rust version (using cargo)
 	- `cd Rust/splay_tree`
 	- `cargo run --release`
+
 Peer Programmed by [ValliereMagic](https://github.com/ValliereMagic) &
 [mchapados](https://github.com/mchapados)
